@@ -70,4 +70,30 @@ public class HttpRequestUtilsTest {
         Pair pair = HttpRequestUtils.parseHeader(header);
         assertThat(pair, is(new Pair("Content-Length", "59")));
     }
+
+    @Test
+    public void getRequestMethod() {
+    }
+
+    @Test
+    public void getUrlPath() {
+        // given
+        String url = "GET /user/create?userId=&password=7537695aA%21&name=&email=yeonbn88%40gmail.com HTTP/1.1";
+
+        // then
+        assertEquals(HttpRequestUtils.getUrlPath(url), "/user/create");
+    }
+
+    @Test
+    public void getParams() {
+        // given
+        String url = "GET /user/create?userId=%EC%A0%95%EC%97%B0%EB%B9%88&password=1234&name=%EC%A0%95%EC%97%B0%EB%B9%88&email=yeonbn%40hotmail.com HTTP/1.1";
+//        String url = "GET /user/create HTTP/1.1";
+        String [] line = url.split(" ");
+        // then
+        System.out.println(line[1].indexOf("?"));
+        System.out.println(line[1].substring(line[1].indexOf("?") + 1));
+        System.out.println(HttpRequestUtils.getParams(url));
+        System.out.println(HttpRequestUtils.getParams(url).get("userId"));
+    }
 }

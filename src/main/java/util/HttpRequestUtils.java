@@ -1,15 +1,62 @@
 package util;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HttpRequestUtils {
+
+    private static final Logger log = LoggerFactory.getLogger(HttpRequestUtils.class);
+
+
+    public static Map<String, String> makeHeaders(BufferedReader br) throws IOException {
+        Map<String, String> headers = new HashMap<>();
+        String line;
+        while ((line = br.readLine()) != null && !"".equals(line)) {
+            String [] headerTokens = line.split(": ");
+            if(headerTokens.length > 1) headers.put(headerTokens[0], headerTokens[1]);
+            log.debug("headers : {}", line);
+        }
+
+        log.debug("Content-Length : {}", headers.get("Content-Length"));
+
+        return headers;
+    }
+    public static String getRequestMethod(String firstLine) {
+        String [] line = firstLine.split(" ");
+        String method = line[0].toUpperCase();
+
+        log.debug("Reqeust : {}", firstLine);
+        log.debug("Request Method {}", method);
+        return method;
+    }
+
+    public static String getUrlPath(String firstLine) {
+        String [] line = firstLine.split(" ");
+        String path = line[1].indexOf("?") != -1
+                ? line[1].substring(0, line[1].indexOf("?")) : line[1];
+        log.debug("URL Path {}", path);
+        return path;
+    }
+
+    public static Map<String, String> getParams(String firstLine) {
+        String [] line = firstLine.split(" ");
+        String paramString = line[1].substring(line[1].indexOf("?") + 1);
+
+        Map<String, String> param = parseQueryString(paramString);
+        log.debug("params : " +param );
+        return param;
+    }
     /**
-     * @param queryString은
+     * @param queryString
      *            URL에서 ? 이후에 전달되는 field1=value1&field2=value2 형식임
      * @return
      */
@@ -18,7 +65,7 @@ public class HttpRequestUtils {
     }
 
     /**
-     * @param 쿠키
+     * @param cookies
      *            값은 name1=value1; name2=value2 형식임
      * @return
      */
