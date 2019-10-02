@@ -41,6 +41,7 @@ public class HttpRequestUtils {
 
     public static String getUrlPath(String firstLine) {
         String [] line = firstLine.split(" ");
+        System.out.println(Arrays.toString(line));
         String path = line[1].indexOf("?") != -1
                 ? line[1].substring(0, line[1].indexOf("?")) : line[1];
         log.debug("URL Path {}", path);

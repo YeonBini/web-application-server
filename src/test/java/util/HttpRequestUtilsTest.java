@@ -96,4 +96,10 @@ public class HttpRequestUtilsTest {
         System.out.println(HttpRequestUtils.getParams(url));
         System.out.println(HttpRequestUtils.getParams(url).get("userId"));
     }
+
+    @Test
+    public void predicateTest() {
+        boolean test = false;
+        System.out.println("abc = " +test);
+    }
 }

@@ -1,23 +1,23 @@
 package webserver;
 
-import java.io.*;
-import java.net.Socket;
-import java.nio.file.Files;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-
+import db.DataBase;
 import model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import util.HttpRequestUtils;
 import util.IOUtils;
-import util.UserUtils;
+
+import java.io.*;
+import java.net.Socket;
+import java.nio.file.Files;
+import java.util.Map;
 
 public class RequestHandler extends Thread {
     private static final Logger log = LoggerFactory.getLogger(RequestHandler.class);
 
     private Socket connection;
+
+    private static boolean login_Yn;
 
     public RequestHandler(Socket connectionSocket) {
         this.connection = connectionSocket;
@@ -34,6 +34,8 @@ public class RequestHandler extends Thread {
 
             // step 2. http request 방식, 경로 및 header 정보를 미리 정리해둔다.
             String line = br.readLine();
+            if("".equals(line) || null == line) return;
+
             String requestMethod = HttpRequestUtils.getRequestMethod(line);
             String path = HttpRequestUtils.getUrlPath(line);
             Map<String, String> headers = HttpRequestUtils.makeHeaders(br);
@@ -48,13 +50,38 @@ public class RequestHandler extends Thread {
             if("POST".equals(requestMethod)) {
                 String requestBody = IOUtils.readData(br, Integer.parseInt(headers.get("Content-Length")));
                 params = HttpRequestUtils.parseQueryString(requestBody);
+                log.debug("[POST] params : {}", params);
             }
 
-            UserUtils.addUser(requestMethod, path, params);
-
-
             DataOutputStream dos = new DataOutputStream(out);
-            byte[] body = new byte[0];
+            byte[] body;
+
+            if("/user/create".equals(path)) {
+//                UserUtils.addUser(requestMethod, path, params);
+                DataBase.addUser(new User(
+                        params.get("userId"),
+                        params.get("password"),
+                        params.get("name"),
+                        params.get("email")
+                    )
+                );
+
+                log.debug("Find userby id : {}", DataBase.findUserById(params.get("userId")));
+            }
+
+
+            // userId, password를 통해 로그인
+            if("/user/login".equals(path)) {
+                User loginUser = DataBase.findUserById(params.get("userId"));
+                login_Yn = true;
+                if(loginUser == null || !loginUser.getPassword().equals(params.get("password"))) {
+                    this.login_Yn = false;
+                    path = "/user/login_failed.html";
+                    log.debug("Login Failed!!!!!!!!");
+                }
+            }
+
+
             try {
                 body = Files.readAllBytes(new File("./webapp" +path).toPath()); // file read util 로 빼기
                 response200Header(dos, body.length);
@@ -64,7 +91,6 @@ public class RequestHandler extends Thread {
                 log.debug("Move to /index.html");
                 response302Header(dos);
             }
-
 
             br.close();
         } catch (IOException e) {
@@ -76,6 +102,7 @@ public class RequestHandler extends Thread {
         try {
             dos.writeBytes("HTTP/1.1 302 Found \r\n");
             dos.writeBytes("Location: /index.html \r\n");
+            dos.writeBytes("Set-Cookie: logined="+ login_Yn + " \r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
             log.error(e.getMessage());
@@ -87,6 +114,7 @@ public class RequestHandler extends Thread {
             dos.writeBytes("HTTP/1.1 200 OK \r\n");
             dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
             dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
+            dos.writeBytes("Set-Cookie: logined=" + login_Yn + " \r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
             log.error(e.getMessage());
