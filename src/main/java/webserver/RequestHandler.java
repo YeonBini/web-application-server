@@ -53,20 +53,30 @@ public class RequestHandler extends Thread {
             UserUtils.addUser(requestMethod, path, params);
 
 
-
-            byte[] body;
+            DataOutputStream dos = new DataOutputStream(out);
+            byte[] body = new byte[0];
             try {
                 body = Files.readAllBytes(new File("./webapp" +path).toPath()); // file read util 로 빼기
-            } catch (Exception e) {
-                log.debug("Cannot find a file given path ");
-                body = Files.readAllBytes(new File("./webapp/index.html").toPath()); // file read util 로 빼기
-            }
-            DataOutputStream dos = new DataOutputStream(out);
+                response200Header(dos, body.length);
+                responseBody(dos, body);
 
-            response200Header(dos, body.length);
-            responseBody(dos, body);
+            } catch (Exception e) {
+                log.debug("Move to /index.html");
+                response302Header(dos);
+            }
+
 
             br.close();
+        } catch (IOException e) {
+            log.error(e.getMessage());
+        }
+    }
+
+    private void response302Header(DataOutputStream dos) {
+        try {
+            dos.writeBytes("HTTP/1.1 302 Found \r\n");
+            dos.writeBytes("Location: /index.html \r\n");
+            dos.writeBytes("\r\n");
         } catch (IOException e) {
             log.error(e.getMessage());
         }
