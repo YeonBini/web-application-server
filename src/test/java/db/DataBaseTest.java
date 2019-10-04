@@ -3,6 +3,12 @@ package db;
 import model.User;
 import org.junit.Test;
 
+import javax.xml.crypto.Data;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+
 import static org.junit.Assert.*;
 
 public class DataBaseTest {
@@ -46,6 +52,7 @@ public class DataBaseTest {
 
         // Then
         assertEquals(DataBase.findAll().size(), 2);
-
+        Collection<User> userList = DataBase.findAll();
+        System.out.println(Arrays.toString(userList.toArray()));
     }
 }

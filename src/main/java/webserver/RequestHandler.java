@@ -10,6 +10,9 @@ import util.IOUtils;
 import java.io.*;
 import java.net.Socket;
 import java.nio.file.Files;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 public class RequestHandler extends Thread {
@@ -17,7 +20,9 @@ public class RequestHandler extends Thread {
 
     private Socket connection;
 
-    private static boolean login_Yn;
+//    private static boolean login_Yn;
+    final private int LOGGED_IN = 1;
+    final private int LOGGED_OUT = 2;
 
     public RequestHandler(Socket connectionSocket) {
         this.connection = connectionSocket;
@@ -71,20 +76,49 @@ public class RequestHandler extends Thread {
 
 
             // userId, password를 통해 로그인
+            int login_Yn = 0;
             if("/user/login".equals(path)) {
                 User loginUser = DataBase.findUserById(params.get("userId"));
-                login_Yn = true;
+                path = "/user/list.html";
+                login_Yn = LOGGED_IN;
                 if(loginUser == null || !loginUser.getPassword().equals(params.get("password"))) {
-                    this.login_Yn = false;
+                    login_Yn = 0;
                     path = "/user/login_failed.html";
                     log.debug("Login Failed!!!!!!!!");
                 }
             }
 
+            boolean logout_Yn = false;
+            if("/user/logout".equals(path)) {
+                login_Yn = LOGGED_OUT;
+            }
+
+            if("/user/list.html".equals(path)) {
+                String cookie = headers.get("Cookie");
+                if(cookie != null) {
+                    Map<String, String> parseCookie = HttpRequestUtils.parseCookies(cookie);
+
+                    if(true == Boolean.parseBoolean((parseCookie.get("logined")))) {
+                        Collection<User> userList = DataBase.findAll();
+                    }
+                }
+
+            }
+
 
             try {
                 body = Files.readAllBytes(new File("./webapp" +path).toPath()); // file read util 로 빼기
-                response200Header(dos, body.length);
+
+                if(login_Yn > 0) {
+                    response200HeaderWhenLoggedIn(dos, body.length, login_Yn);
+                } else {
+                    if(!path.endsWith(".css")) {
+                        response200Header(dos, body.length, "html");
+                    } else {
+                        response200Header(dos, body.length, "css");
+                    }
+
+                }
                 responseBody(dos, body);
 
             } catch (Exception e) {
@@ -102,19 +136,30 @@ public class RequestHandler extends Thread {
         try {
             dos.writeBytes("HTTP/1.1 302 Found \r\n");
             dos.writeBytes("Location: /index.html \r\n");
-            dos.writeBytes("Set-Cookie: logined="+ login_Yn + " \r\n");
+//            dos.writeBytes("Set-Cookie: logined="+ login_Yn + " \r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
             log.error(e.getMessage());
         }
     }
 
-    private void response200Header(DataOutputStream dos, int lengthOfBodyContent) {
+    private void response200Header(DataOutputStream dos, int lengthOfBodyContent, String htmlOrCss) {
+        try {
+            dos.writeBytes("HTTP/1.1 200 OK \r\n");
+            dos.writeBytes("Content-Type: text/" + htmlOrCss+";charset=utf-8\r\n");
+            dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
+            dos.writeBytes("\r\n");
+        } catch (IOException e) {
+            log.error(e.getMessage());
+        }
+    }
+
+    private void response200HeaderWhenLoggedIn(DataOutputStream dos, int lengthOfBodyContent, int login_Yn) {
         try {
             dos.writeBytes("HTTP/1.1 200 OK \r\n");
             dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
             dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
-            dos.writeBytes("Set-Cookie: logined=" + login_Yn + " \r\n");
+            dos.writeBytes("Set-Cookie: logined=" + (login_Yn==1) + " \r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
             log.error(e.getMessage());

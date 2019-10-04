@@ -18,4 +18,10 @@ public class IOUtilsTest {
 
         logger.debug("parse body : {}", IOUtils.readData(br, data.length()));
     }
+
+    @Test
+    public void intToBooleanTest () {
+        int a = 1;
+        System.out.println(a == 2);
+    }
 }
