@@ -1,0 +1,4 @@
+GET /user/create?userId=111&password=111&name=YeonBin HTTP/1.1
+Host: localhost:8080
+Connection: keep-alive
+Accept: */*
