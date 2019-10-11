@@ -17,6 +17,7 @@ public class HttpRequest {
     private Logger log = LoggerFactory.getLogger(HttpRequest.class);
 
     private Map<String, String> headers;
+    private Map<String, String> cookies;
     private Map<String, String> parameters;
     private RequestLine requestLine;
 
@@ -30,9 +31,10 @@ public class HttpRequest {
             e.printStackTrace();
         }
 
-        // step 2. headers 세팅
+        // step 2. headers, cookies 세팅
         try {
             headers = setHeaders(br);
+            cookies = setCookies();
         } catch (IOException e) {
             log.debug("Errors on setting headers values : {}", e);
         }
@@ -51,6 +53,10 @@ public class HttpRequest {
 
     }
 
+    private Map<String, String> setCookies() {
+        return HttpRequestUtils.parseCookies(getHeader("Cookie"));
+    }
+
     private Map<String, String> setPostParameter(BufferedReader br, int content_length) throws IOException {
         String readRequestBody = IOUtils.readData(br, content_length);
         return HttpRequestUtils.parseQueryString(readRequestBody);
@@ -64,7 +70,6 @@ public class HttpRequest {
             String[] tokens = line.split(":");
             headers.put(tokens[0].trim(), tokens[1].trim());
         }
-
 
         return headers;
     }
@@ -91,5 +96,9 @@ public class HttpRequest {
 
     public String getPath() {
         return requestLine.getPath();
+    }
+
+    public String getCookie(String key) {
+        return cookies.get(key);
     }
 }
