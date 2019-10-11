@@ -26,7 +26,9 @@ public class HttpRequest {
 
         // step 1. method, path 설정
         try {
-            requestLine = new RequestLine(br.readLine());
+            String line = br.readLine();
+            if(line == null) return;
+            requestLine = new RequestLine(line);
         } catch (IOException e) {
             e.printStackTrace();
         }

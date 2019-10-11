@@ -49,8 +49,8 @@ public class HttpResponse {
 
     public void forwardBody(String body) {
         byte[] content = body.getBytes();
-        headers.put("Content_Type", "text/html;charset=utf-8 \r\n");
-        headers.put("Content_Length", body.length() + "");
+        headers.put("Content-Type", "text/html;charset=utf-8 \r\n");
+        headers.put("Content-Length", body.length() + "");
         response200Header(content.length);
         responseBody(content);
     }
