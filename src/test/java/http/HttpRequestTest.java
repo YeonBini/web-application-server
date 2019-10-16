@@ -1,5 +1,6 @@
-package util;
+package http;
 
+import http.HttpRequest;
 import org.junit.Test;
 
 import java.io.File;
@@ -18,18 +19,29 @@ public class HttpRequestTest {
         InputStream in = new FileInputStream(new File(testDirectory + "Http_Get.txt"));
         HttpRequest httpRequest = new HttpRequest(in);
 
-        assertEquals("GET", httpRequest.getMethod());
+        assertEquals(HttpMethod.GET, httpRequest.getMethod());
         assertEquals("/user/create", httpRequest.getPath());
         assertEquals("keep-alive", httpRequest.getHeaders().get("Connection"));
+        assertEquals("logined=true", httpRequest.getHeader("Cookie"));
         assertEquals("111", httpRequest.getParameters().get("userId"));
     }
+    @Test
+    public void request_Get_Cookie() throws FileNotFoundException {
+        InputStream in = new FileInputStream(new File(testDirectory + "Http_Get.txt"));
+        HttpRequest httpRequest = new HttpRequest(in);
+
+        assertEquals(HttpMethod.GET, httpRequest.getMethod());
+        assertEquals("true", httpRequest.getCookie("logined"));
+    }
+
+
 
     @Test
     public void request_Post() throws FileNotFoundException {
         InputStream in = new FileInputStream(new File(testDirectory + "Http_Post.txt"));
         HttpRequest httpRequest = new HttpRequest(in);
 
-        assertEquals("POST", httpRequest.getMethod());
+        assertEquals(HttpMethod.POST, httpRequest.getMethod());
         assertEquals("/user/create", httpRequest.getPath());
         assertEquals("keep-alive", httpRequest.getHeader("Connection"));
         assertEquals("111", httpRequest.getParameter("userId"));

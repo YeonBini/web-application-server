@@ -1,4 +1,4 @@
-package util;
+package http;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +21,12 @@ public class HttpResponse {
         dos = new DataOutputStream(os);
     }
 
+
+    public void addHeaders(String key, String value) {
+        headers.put(key, value);
+    }
+
+
     public void forward(String url) {
         try {
             byte[] body = Files.readAllBytes(new File("./webapp/" + url).toPath());
@@ -40,28 +46,27 @@ public class HttpResponse {
         }
     }
 
-    public void addHeaders(String key, String value) {
-        headers.put(key, value);
-    }
 
     public void forwardBody(String body) {
         byte[] content = body.getBytes();
-        headers.put("Content_Type", "text/html;charset=utf-8 \r\n");
-        headers.put("Content_Length", body.length() + "");
+        headers.put("Content-Type", "text/html;charset=utf-8 \r\n");
+        headers.put("Content-Length", body.length() + "");
         response200Header(content.length);
         responseBody(content);
     }
+
 
     public void sendRedirect(String redirectUrl) {
         try {
             dos.writeBytes("HTTP/1.1 302 Found \r\n");
             processHeaders();
-            dos.writeBytes("Location: "+ redirectUrl +" \r\n");
+            dos.writeBytes("Location: " + redirectUrl + " \r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
             log.error("Errors when redirection : {}", e);
         }
     }
+
 
     private void responseBody(byte[] body) {
         try {
@@ -73,23 +78,25 @@ public class HttpResponse {
         }
     }
 
+
     private void response200Header(int length) {
         try {
             dos.writeBytes("HTTP/1.1 200 OK \r\n");
             processHeaders();
             dos.writeBytes("\r\n");
         } catch (IOException e) {
-            log.error("Errors on writing response 200 header :{}", e);
+            log.error("Errors on writing response 200 header :{}", e.getMessage());
         }
     }
+
 
     private void processHeaders() {
         try {
             for (String key : headers.keySet()) {
-                dos.writeBytes(key + ": " + headers.get(key) +"\r\n");
+                dos.writeBytes(key + ": " + headers.get(key) + "\r\n");
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("Errors on writing header values : {}", e.getMessage());
         }
     }
 
