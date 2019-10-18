@@ -3,6 +3,7 @@ package controller;
 import db.DataBase;
 import http.HttpRequest;
 import http.HttpResponse;
+import http.HttpSession;
 import model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,9 +27,18 @@ public class ListUserController extends AbstractController {
 
     @Override
     void doGet(HttpRequest request, HttpResponse response) {
-        if (!isLogin(request.getCookie("logined"))) {
+        if(request.getSession().getAttribute("user") == null) {
             response.sendRedirect("/user/login.html");
         }
+
+//        if (!isLogin(request.getCookie("logined"))) {
+//            response.sendRedirect("/user/login.html");
+//        }
+
+        if(!isLogin(request.getSession())) {
+            response.sendRedirect("/user/login.html");
+        }
+
         Collection<User> users = DataBase.findAll();
         StringBuilder sb = new StringBuilder();
         sb.append("<table border='1'>");
@@ -44,9 +54,11 @@ public class ListUserController extends AbstractController {
         response.forwardBody(sb.toString());
     }
 
-    private boolean isLogin(String cookieValue) {
-        if(cookieValue == null) return false;
-        return Boolean.parseBoolean(cookieValue);
+    private boolean isLogin(HttpSession session) {
+        if(session.getAttribute("user") == null) {
+            return false;
+        }
+        return true;
     }
 
     private String urlDecode(String value)  {

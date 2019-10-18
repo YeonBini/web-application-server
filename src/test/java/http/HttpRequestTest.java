@@ -25,6 +25,7 @@ public class HttpRequestTest {
         assertEquals("logined=true", httpRequest.getHeader("Cookie"));
         assertEquals("111", httpRequest.getParameters().get("userId"));
     }
+
     @Test
     public void request_Get_Cookie() throws FileNotFoundException {
         InputStream in = new FileInputStream(new File(testDirectory + "Http_Get.txt"));
