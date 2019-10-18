@@ -103,4 +103,8 @@ public class HttpRequest {
     public String getCookie(String key) {
         return cookies.get(key);
     }
+
+    public HttpSession getSession() {
+        return HttpSessions.getSessions(getCookie("JSESSIONID"));
+    }
 }
